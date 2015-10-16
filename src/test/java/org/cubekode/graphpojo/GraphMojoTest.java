@@ -18,29 +18,29 @@ public class GraphMojoTest {
 
   private static GraphPojoMapper pojoMapper;
 
-  private static List<Product> productList;
+  private static List<SampleProduct> productList;
 
-  private static Product singleProduct;
+  private static SampleProduct singleProduct;
 
   @BeforeClass
   public static void mapClasses() {
 
-    productList = new ArrayList<Product>();
+    productList = new ArrayList<SampleProduct>();
     IntStream.rangeClosed(1, 10).forEach((i) -> {
-      productList.add(new Product(i, "Product " + i, "Desc Product " + i, (float) i));
+      productList.add(new SampleProduct(i, "Product " + i, "Desc Product " + i, (float) i));
     });
     singleProduct = productList.get(0);
 
     pojoMapper = new GraphPojoMapper();
-    pojoMapper.mapClass(Product.class, new GraphPojoFetcher<Product>() {
+    pojoMapper.mapClass(SampleProduct.class, new GraphPojoFetcher<SampleProduct>() {
 
       @Override
-      protected Product getObject(DataFetchingEnvironment environment) {
+      protected SampleProduct getObject(DataFetchingEnvironment environment) {
         return singleProduct;
       }
 
       @Override
-      protected List<Product> getList(DataFetchingEnvironment environment) {
+      protected List<SampleProduct> getList(DataFetchingEnvironment environment) {
         return productList;
       }
     });

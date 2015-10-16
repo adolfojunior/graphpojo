@@ -1,8 +1,11 @@
-# graphpojo
-GraphQL Pojo Mapping.
+package org.cubekode.graphpojo;
 
-Java Sample
-```Java
+import graphql.schema.DataFetchingEnvironment;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
 public class Sample {
   
   public static void main(String[] args) {
@@ -30,9 +33,3 @@ public class Sample {
     System.out.println(queryResult);
   }
 }
-```
-
-Will print:
-```
-{SampleProduct={id=1, name=Product 1}}
-```

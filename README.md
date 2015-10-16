@@ -1,0 +1,2 @@
+# graphpojo
+GraphQL Pojo Mapping.

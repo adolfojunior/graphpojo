@@ -27,7 +27,7 @@ public class GraphMojoTest {
 
     productList = new ArrayList<SampleProduct>();
     IntStream.rangeClosed(1, 10).forEach((i) -> {
-      productList.add(new SampleProduct(i, "Product " + i, "Desc Product " + i, (float) i));
+      productList.add(new SampleProduct(i, "Product " + i, "Desc Product " + i, (float) i, Arrays.asList(new Category(1, "Category 1"))));
     });
     singleProduct = productList.get(0);
 

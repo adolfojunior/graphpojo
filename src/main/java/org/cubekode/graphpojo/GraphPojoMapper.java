@@ -4,6 +4,7 @@ import static graphql.schema.GraphQLObjectType.newObject;
 import graphql.GraphQL;
 import graphql.Scalars;
 import graphql.schema.DataFetcher;
+import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.GraphQLArgument;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLInputType;
@@ -17,6 +18,7 @@ import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,12 +83,24 @@ public class GraphPojoMapper {
 
   private GraphQLFieldDefinition mapField(PropertyDescriptor prop) {
 
-    return GraphQLFieldDefinition
+    graphql.schema.GraphQLFieldDefinition.Builder type = GraphQLFieldDefinition
         .newFieldDefinition()
         .description(prop.getPropertyType().getName())
         .name(prop.getName())
-        .type(mapFieldType(prop))
-        .build();
+        .type(mapFieldType(prop));
+    
+    //TODO figure out how to get the generic type from the list
+    if (prop.getPropertyType().equals(List.class) 
+        && mappings.containsKey(((java.lang.reflect.ParameterizedType)prop.getReadMethod().getGenericReturnType()).getActualTypeArguments()[0])) {
+      
+      DataFetcher fetcher = mappings.get(((java.lang.reflect.ParameterizedType)prop.getReadMethod().getGenericReturnType()).getActualTypeArguments()[0]).fetcher;
+      
+      if (fetcher != null) {
+        type.dataFetcher(fetcher);
+      }
+    }
+    
+    return type.build();
   }
 
   private GraphQLOutputType mapFieldType(PropertyDescriptor prop) {
@@ -101,6 +115,8 @@ public class GraphPojoMapper {
       return Scalars.GraphQLInt;
     } else if (Boolean.class.equals(type)) {
       return Scalars.GraphQLBoolean;
+    } else if (List.class.equals(type)) {
+      return new GraphQLList(mappings.get(Category.class).type);
     }
     return mapClass(type, null);
   }

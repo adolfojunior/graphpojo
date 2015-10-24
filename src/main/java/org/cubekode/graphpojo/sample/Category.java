@@ -1,9 +1,9 @@
-package org.cubekode.graphpojo;
+package org.cubekode.graphpojo.sample;
 
 public class Category {
 
   private Integer id;
-  
+
   private String name;
 
   public Category(Integer id, String name) {
@@ -27,7 +27,7 @@ public class Category {
   public void setName(String name) {
     this.name = name;
   }
-  
-  
-  
+
+
+
 }

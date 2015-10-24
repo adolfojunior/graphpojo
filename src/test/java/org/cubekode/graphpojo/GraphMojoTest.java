@@ -9,38 +9,41 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
 
+import org.cubekode.graphpojo.sample.Category;
+import org.cubekode.graphpojo.sample.Product;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
 
 
 public class GraphMojoTest {
 
   private static GraphPojoMapper pojoMapper;
 
-  private static List<SampleProduct> productList;
+  private static List<Product> productList;
 
-  private static SampleProduct singleProduct;
+  private static Product singleProduct;
 
   @BeforeClass
   public static void mapClasses() {
 
-    productList = new ArrayList<SampleProduct>();
+    productList = new ArrayList<Product>();
     IntStream.rangeClosed(1, 10).forEach((i) -> {
-      productList.add(new SampleProduct(i, "Product " + i, "Desc Product " + i, (float) i, Arrays.asList(new Category(1, "Category 1"))));
+      productList.add(new Product(i, "Product " + i, "Desc Product " + i, (float) i, Arrays.asList(new Category(1, "Category 1"))));
     });
     singleProduct = productList.get(0);
 
     pojoMapper = new GraphPojoMapper();
-    pojoMapper.mapClass(SampleProduct.class, new GraphPojoFetcher<SampleProduct>() {
+    pojoMapper.mapClass(Product.class, new GraphPojoFetcher<Product>() {
 
       @Override
-      protected SampleProduct getObject(DataFetchingEnvironment environment) {
+      protected Product getObject(DataFetchingEnvironment environment) {
         return singleProduct;
       }
 
       @Override
-      protected List<SampleProduct> getList(DataFetchingEnvironment environment) {
+      protected List<Product> getList(DataFetchingEnvironment environment) {
         return productList;
       }
     });

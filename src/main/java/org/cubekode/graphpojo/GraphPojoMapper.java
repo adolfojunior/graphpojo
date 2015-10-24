@@ -4,7 +4,6 @@ import static graphql.schema.GraphQLObjectType.newObject;
 import graphql.GraphQL;
 import graphql.Scalars;
 import graphql.schema.DataFetcher;
-import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.GraphQLArgument;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLInputType;
@@ -18,10 +17,11 @@ import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.cubekode.graphpojo.sample.Category;
 
 public class GraphPojoMapper {
 
@@ -71,6 +71,8 @@ public class GraphPojoMapper {
 
     Builder builder = newObject().name(type.getSimpleName());
 
+
+
     PropertyDescriptor[] properties = Introspector.getBeanInfo(type).getPropertyDescriptors();
 
     for (PropertyDescriptor property : properties) {
@@ -83,23 +85,24 @@ public class GraphPojoMapper {
 
   private GraphQLFieldDefinition mapField(PropertyDescriptor prop) {
 
-    graphql.schema.GraphQLFieldDefinition.Builder type = GraphQLFieldDefinition
-        .newFieldDefinition()
-        .description(prop.getPropertyType().getName())
-        .name(prop.getName())
-        .type(mapFieldType(prop));
-    
-    //TODO figure out how to get the generic type from the list
-    if (prop.getPropertyType().equals(List.class) 
-        && mappings.containsKey(((java.lang.reflect.ParameterizedType)prop.getReadMethod().getGenericReturnType()).getActualTypeArguments()[0])) {
-      
-      DataFetcher fetcher = mappings.get(((java.lang.reflect.ParameterizedType)prop.getReadMethod().getGenericReturnType()).getActualTypeArguments()[0]).fetcher;
-      
+    graphql.schema.GraphQLFieldDefinition.Builder type =
+        GraphQLFieldDefinition.newFieldDefinition().description(prop.getPropertyType().getName())
+            .name(prop.getName()).type(mapFieldType(prop));
+
+    // TODO figure out how to get the generic type from the list
+    if (prop.getPropertyType().equals(List.class)
+        && mappings.containsKey(((java.lang.reflect.ParameterizedType) prop.getReadMethod()
+            .getGenericReturnType()).getActualTypeArguments()[0])) {
+
+      DataFetcher fetcher =
+          mappings.get(((java.lang.reflect.ParameterizedType) prop.getReadMethod()
+              .getGenericReturnType()).getActualTypeArguments()[0]).fetcher;
+
       if (fetcher != null) {
         type.dataFetcher(fetcher);
       }
     }
-    
+
     return type.build();
   }
 
@@ -123,21 +126,12 @@ public class GraphPojoMapper {
 
   private void mapQueries(PojoMapping mapping) {
 
-    addQuery(GraphQLFieldDefinition
-        .newFieldDefinition()
-        .name(mapping.type.getName())
-        .type(mapping.type)
-        .argument(arguments(mapping.type))
-        .dataFetcher(mapping.fetcher)
-        .build());
+    addQuery(GraphQLFieldDefinition.newFieldDefinition().name(mapping.type.getName())
+        .type(mapping.type).argument(arguments(mapping.type)).dataFetcher(mapping.fetcher).build());
 
-    addQuery(GraphQLFieldDefinition
-        .newFieldDefinition()
-        .name(mapping.type.getName() + "List")
-        .type(new GraphQLList(mapping.type))
-        .argument(arguments(mapping.type))
-        .dataFetcher(mapping.fetcher)
-        .build());
+    addQuery(GraphQLFieldDefinition.newFieldDefinition().name(mapping.type.getName() + "List")
+        .type(new GraphQLList(mapping.type)).argument(arguments(mapping.type))
+        .dataFetcher(mapping.fetcher).build());
   }
 
   private void addQuery(GraphQLFieldDefinition listField) {
@@ -150,11 +144,8 @@ public class GraphPojoMapper {
     List<GraphQLArgument> arguments = new ArrayList<>(fields.size());
 
     for (GraphQLFieldDefinition field : fields) {
-      arguments.add(GraphQLArgument
-          .newArgument()
-          .name(field.getName())
-          .type((GraphQLInputType) field.getType())
-          .build());
+      arguments.add(GraphQLArgument.newArgument().name(field.getName())
+          .type((GraphQLInputType) field.getType()).build());
     }
     return arguments;
   }

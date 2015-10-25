@@ -6,6 +6,8 @@ import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.GraphQLArgument;
 import graphql.schema.GraphQLFieldDefinition;
+import graphql.schema.GraphQLInputObjectField;
+import graphql.schema.GraphQLInputObjectType;
 import graphql.schema.GraphQLInputType;
 import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLObjectType;
@@ -43,16 +45,32 @@ public class GraphPojoSchema {
 
   protected GraphQLObjectType defineClass(TypeMapping mapping) {
     if (mapping.objectType == null) {
+      
       GraphQLObjectType.Builder builder = GraphQLObjectType.newObject().name(mapping.name);
+      GraphQLInputObjectType.Builder argumentBuild = GraphQLInputObjectType.newInputObject().name(mapping.name);
+      
       for (TypeField property : mapping.fields.values()) {
         if (mapping.type == property.field.getType()) {
           throw new IllegalStateException("Recursive type is not supported yet - " + property.field);
         }
         builder.field(defineProperty(property));
+        argumentBuild.field(defineArgumentProperty(property));
       }
+      
       mapping.objectType = builder.build();
+      mapping.argumentType = argumentBuild.build();
     }
     return mapping.objectType;
+  }
+
+  private GraphQLInputObjectField defineArgumentProperty(TypeField property) {
+    GraphQLInputType inputType;
+    if (property instanceof ObjectTypeField) {
+      inputType = mappings.get(property.field.getType()).argumentType;
+    } else {
+      inputType = (GraphQLInputType) defineType(property);
+    }
+    return GraphQLInputObjectField.newInputObjectField().name(property.name).type(inputType).build();
   }
 
   private GraphQLFieldDefinition defineProperty(TypeField property) {
@@ -140,12 +158,17 @@ public class GraphPojoSchema {
 
   private List<GraphQLArgument> defineArguments(TypeMapping mapping) {
 
-    List<GraphQLFieldDefinition> fields = mapping.objectType.getFieldDefinitions();
+    Map<String, TypeField> fields = mapping.fields;
     List<GraphQLArgument> arguments = new ArrayList<>(fields.size());
 
-    for (GraphQLFieldDefinition field : fields) {
-      arguments.add(GraphQLArgument.newArgument().name(field.getName())
-          .type((GraphQLInputType) field.getType()).build());
+    for (TypeField field : fields.values()) {
+      if (mappings.containsKey(mapping.type)) {
+        arguments.add(GraphQLArgument.newArgument().name(field.name)
+            .type(mappings.get(mapping.type).argumentType).build());
+      } else {
+        arguments.add(GraphQLArgument.newArgument().name(field.name)
+            .type((GraphQLInputType) mapping.objectType.getFieldDefinition(field.name)).build());
+      }
     }
     return arguments;
   }

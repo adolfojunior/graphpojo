@@ -1,6 +1,7 @@
 package org.cubekode.graphpojo.schema;
 
 import graphql.schema.DataFetcher;
+import graphql.schema.GraphQLInputObjectType;
 import graphql.schema.GraphQLObjectType;
 
 import java.lang.reflect.Field;
@@ -64,8 +65,10 @@ public class GraphPojoSchemaBuilder {
     DataFetcher fetcher;
     Map<String, TypeField> fields;
     boolean internal;
+
     // graphql mapped type
     GraphQLObjectType objectType;
+    GraphQLInputObjectType argumentType;
 
     public TypeMapping(String name, Class<?> type, DataFetcher fetcher, boolean internal) {
       this.name = name;
@@ -82,6 +85,7 @@ public class GraphPojoSchemaBuilder {
     }
   }
 
+  private GraphPojoMapperListenerImpl checkListener = new GraphPojoMapperListenerImpl();
   private Map<Class<?>, TypeMapping> mappings = new HashMap<>();
 
   public TypeMapping add(Class<?> type, DataFetcher fetcher) {
@@ -120,6 +124,10 @@ public class GraphPojoSchemaBuilder {
     Map<String, TypeField> fields = new HashMap<>();
 
     for (Field field : lookupFields(mapping.type).values()) {
+
+      if (!checkListener.validField(field)) {
+        continue;
+      }
 
       String name = field.getName();
 

@@ -6,6 +6,8 @@ public class Category {
 
   private String name;
 
+//  private Product product;
+
   public Category(Integer id, String name) {
     super();
     this.id = id;

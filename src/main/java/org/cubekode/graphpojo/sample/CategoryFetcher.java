@@ -5,7 +5,7 @@ import graphql.schema.DataFetchingEnvironment;
 import java.util.Arrays;
 import java.util.List;
 
-import org.cubekode.graphpojo.GraphPojoFetcher;
+import org.cubekode.graphpojo.schema.GraphPojoFetcher;
 
 public class CategoryFetcher extends GraphPojoFetcher<Category> {
   @Override

@@ -1,4 +1,4 @@
-package org.cubekode.graphpojo;
+package org.cubekode.graphpojo.schema;
 
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;

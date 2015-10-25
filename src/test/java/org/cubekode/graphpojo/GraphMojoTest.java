@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.stream.IntStream;
 
 import org.cubekode.graphpojo.sample.Category;
+import org.cubekode.graphpojo.sample.CategoryFetcher;
 import org.cubekode.graphpojo.sample.Product;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -35,6 +36,7 @@ public class GraphMojoTest {
     singleProduct = productList.get(0);
 
     pojoMapper = new GraphPojoMapper();
+    pojoMapper.mapClass(Category.class, new CategoryFetcher());
     pojoMapper.mapClass(Product.class, new GraphPojoFetcher<Product>() {
 
       @Override

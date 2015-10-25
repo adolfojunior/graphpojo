@@ -76,7 +76,8 @@ public class GraphPojoMapper {
     PropertyDescriptor[] properties = Introspector.getBeanInfo(type).getPropertyDescriptors();
 
     for (PropertyDescriptor property : properties) {
-      if (!"class".equals(property.getName())) {
+      if (!"class".equals(property.getName())
+          && !Map.class.equals(property.getPropertyType())) {
         builder.field(mapField(property));
       }
     }
@@ -111,15 +112,22 @@ public class GraphPojoMapper {
     Class<?> type = prop.getPropertyType();
 
     if (String.class.equals(type)) {
-      return Scalars.GraphQLString;
+      return ScalarsExtension.GraphQLString;
     } else if (Float.class.equals(type)) {
-      return Scalars.GraphQLFloat;
+      return ScalarsExtension.GraphQLFloat;
+    } else if (Double.class.equals(type)) {
+      return ScalarsExtension.GraphQLDouble;
     } else if (Integer.class.equals(type)) {
-      return Scalars.GraphQLInt;
+      return ScalarsExtension.GraphQLInt;
+    } else if (Long.class.equals(type)) {
+      return ScalarsExtension.GraphQLLong;
     } else if (Boolean.class.equals(type)) {
-      return Scalars.GraphQLBoolean;
-    } else if (List.class.equals(type)) {
-      return new GraphQLList(mappings.get(Category.class).type);
+      return ScalarsExtension.GraphQLBoolean;
+    } else if (prop.getPropertyType().equals(List.class)
+        && mappings.containsKey(((java.lang.reflect.ParameterizedType) prop.getReadMethod()
+            .getGenericReturnType()).getActualTypeArguments()[0])) {
+      return new GraphQLList(mappings.get(((java.lang.reflect.ParameterizedType) prop.getReadMethod()
+          .getGenericReturnType()).getActualTypeArguments()[0]).type);
     }
     return mapClass(type, null);
   }

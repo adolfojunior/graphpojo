@@ -3,33 +3,16 @@ GraphQL Pojo Mapping.
 
 Java Sample
 ```Java
-public class Sample {
-  
-  public static void main(String[] args) {
-    
-    GraphPojoMapper pojoMapper = new GraphPojoMapper();
+GraphPojoSchema schema = new GraphPojoSchemaBuilder()
+	.add(Category.class, new CategoryFetcher());
+	.add(Product.class, new ProductFetcher());
+	.build();
 
-    pojoMapper.mapClass(SampleProduct.class, new GraphPojoFetcher<SampleProduct>() {
+String query = "query GetProduct { Product { id name categories {name} } }";
 
-      @Override
-      protected SampleProduct getObject(DataFetchingEnvironment environment) {
-        return new SampleProduct(1, "Product 1", "Desc Product 1", 1.0f);
-      }
+Map<String, Object> queryResult = schema.execute(query);
 
-      @Override
-      protected List<SampleProduct> getList(DataFetchingEnvironment environment) {
-        return Arrays.asList(
-          new SampleProduct(1, "Product 1", "Desc Product 1", 1.0f),
-          new SampleProduct(2, "Product 2", "Desc Product 2", 2.0f)
-        );
-      }
-    });
-
-    Map<String, Object> queryResult = pojoMapper.execute("query GetProduct { SampleProduct { id name } } ");
-
-    System.out.println(queryResult);
-  }
-}
+System.out.println(queryResult);
 ```
 
 Will print:

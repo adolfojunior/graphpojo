@@ -17,13 +17,13 @@ import org.cubekode.graphpojo.util.ReflectionUtils;
 
 public class GraphPojoSchemaBuilder {
 
-  static class TypeField {
+  static class PojoProperty {
 
     String name;
     Field field;
     DataFetcher fetcher;
 
-    TypeField(String name, Field field, DataFetcher fetcher) {
+    PojoProperty(String name, Field field, DataFetcher fetcher) {
       this.name = name;
       this.field = field;
       this.fetcher = fetcher;
@@ -36,11 +36,11 @@ public class GraphPojoSchemaBuilder {
     }
   }
 
-  static class ListTypeField extends TypeField {
+  static class ListProperty extends PojoProperty {
 
     Class<?> listType;
 
-    public ListTypeField(String name, Field field, Class<?> listType, DataFetcher fetcher) {
+    public ListProperty(String name, Field field, Class<?> listType, DataFetcher fetcher) {
       super(name, field, fetcher);
       this.listType = listType;
     }
@@ -51,9 +51,9 @@ public class GraphPojoSchemaBuilder {
     }
   }
 
-  static class ObjectTypeField extends TypeField {
+  static class RelationshipProperty extends PojoProperty {
 
-    public ObjectTypeField(String name, Field field, DataFetcher fetcher) {
+    public RelationshipProperty(String name, Field field, DataFetcher fetcher) {
       super(name, field, fetcher);
     }
   }
@@ -63,7 +63,7 @@ public class GraphPojoSchemaBuilder {
     String name;
     Class<?> type;
     DataFetcher fetcher;
-    Map<String, TypeField> fields;
+    Map<String, PojoProperty> fields;
     boolean internal;
 
     // graphql mapped type
@@ -85,24 +85,35 @@ public class GraphPojoSchemaBuilder {
     }
   }
 
-  private GraphPojoMapperListenerImpl checkListener = new GraphPojoMapperListenerImpl();
+  private GraphSchemaAdapter schemaAdapter = new JacksonAnnotationsAdapter();
+
+  private PropertyFetcherStrategy fetcherStrategy = PropertyFetcherStrategies.FIELD_REFLECTION;
+
   private Map<Class<?>, TypeMapping> mappings = new HashMap<>();
 
-  public TypeMapping add(Class<?> type, DataFetcher fetcher) {
-    return add(type.getSimpleName(), type, fetcher);
+  public GraphPojoSchemaBuilder fetcherStrategy(PropertyFetcherStrategy fetcherStrategy) {
+    this.fetcherStrategy = fetcherStrategy;
+    return this;
   }
 
-  public TypeMapping add(String name, Class<?> type, DataFetcher fetcher) {
+  public GraphPojoSchemaBuilder add(Class<?> type, DataFetcher fetcher) {
+    add(type.getSimpleName(), type, fetcher);
+    return this;
+  }
+
+  public GraphPojoSchemaBuilder add(String name, Class<?> type, DataFetcher fetcher) {
     TypeMapping mapping = mappings.get(type);
     if (mapping != null) {
       if (mapping.internal) {
         mapping.fetcher = fetcher;
         mapping.internal = false;
-        return mapping;
+      } else {
+        throw new IllegalArgumentException("Duplicate definition of " + type);
       }
-      throw new IllegalArgumentException("Duplicate definition of " + type);
+    } else {
+      mapClass(name, type, fetcher, false);
     }
-    return mapClass(name, type, fetcher, false);
+    return this;
   }
 
   private TypeMapping mapClass(String name, Class<?> type, DataFetcher fetcher, boolean internal) {
@@ -121,11 +132,11 @@ public class GraphPojoSchemaBuilder {
 
   private void mapFields(TypeMapping mapping) {
 
-    Map<String, TypeField> fields = new HashMap<>();
+    Map<String, PojoProperty> fields = new HashMap<>();
 
     for (Field field : lookupFields(mapping.type).values()) {
 
-      if (!checkListener.validField(field)) {
+      if (!schemaAdapter.validField(field)) {
         continue;
       }
 
@@ -142,11 +153,11 @@ public class GraphPojoSchemaBuilder {
     mapping.fields = fields;
   }
 
-  private TypeField createSimpleField(Field field, String name) {
-    return new TypeField(name, field, null);
+  private PojoProperty createSimpleField(Field field, String name) {
+    return new PojoProperty(name, field, null);
   }
 
-  private TypeField createListField(String name, Field field) {
+  private PojoProperty createListField(String name, Field field) {
 
     Type genericType = field.getGenericType();
 
@@ -158,21 +169,21 @@ public class GraphPojoSchemaBuilder {
           // internal objecting map
           mapClass(name, typeClass, null, true);
         }
-        return new ListTypeField(name, field, typeClass, null);
+        return new ListProperty(name, field, typeClass, null);
       }
       throw new IllegalStateException("Generics is needed to be a raw type at " + field);
     }
     throw new IllegalStateException("Generics is mandatory for List type at " + field);
   }
 
-  private TypeField createObjectField(String name, Field field) {
+  private PojoProperty createObjectField(String name, Field field) {
     // internal object mapping
     mapClass(name, field.getType(), null, true);
-    return new ObjectTypeField(name, field, (DataFetcher) null);
+    return new RelationshipProperty(name, field, (DataFetcher) null);
   }
 
   private Map<String, Field> lookupFields(Class<?> type) {
-    return ReflectionUtils.getFields(type);
+    return ReflectionUtils.lookupFields(type);
   }
 
   private boolean isPrimitiveValue(Class<?> type) {
@@ -187,6 +198,6 @@ public class GraphPojoSchemaBuilder {
   }
 
   public GraphPojoSchema build() {
-    return new GraphPojoSchema(mappings);
+    return new GraphPojoSchema(mappings, fetcherStrategy);
   }
 }

@@ -11,7 +11,9 @@ public class ProductFetcher extends GraphPojoFetcher<Product> {
 
   @Override
   protected Product getObject(DataFetchingEnvironment environment) {
+    
     List<Category> categories = Arrays.asList(new Category(1, "Local Category 1"), new Category(2, "Local Category 2"));
+    
     return new Product(1, "Product 1", "Desc Product 1", 1.0f, categories);
   }
 

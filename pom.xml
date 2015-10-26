@@ -3,8 +3,8 @@
 
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>test</groupId>
-	<artifactId>testgraphql</artifactId>
+	<groupId>org.cubekode</groupId>
+	<artifactId>graphql</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 
 	<properties>
@@ -16,6 +16,7 @@
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.12</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.graphql-java</groupId>

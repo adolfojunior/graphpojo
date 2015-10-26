@@ -1,17 +1,25 @@
-package org.cubekode.graphpojo;
+package org.cubekode.graphpojo.sample;
 
-public class SampleProduct {
+import java.util.List;
+
+import org.cubekode.graphpojo.annotation.Relationship;
+
+public class Product {
 
   private Integer id;
   private String name;
   private String desc;
   private Float price;
 
-  public SampleProduct(Integer id, String name, String desc, Float price) {
+  @Relationship(name = "Category", fetcher = CategoryFetcher.class)
+  private List<Category> categories;
+
+  public Product(Integer id, String name, String desc, Float price, List<Category> categories) {
     this.id = id;
     this.name = name;
     this.desc = desc;
     this.price = price;
+    this.categories = categories;
   }
 
   public Integer getId() {
@@ -45,4 +53,13 @@ public class SampleProduct {
   public void setPrice(Float price) {
     this.price = price;
   }
+
+  public List<Category> getCategories() {
+    return categories;
+  }
+
+  public void setCategories(List<Category> categories) {
+    this.categories = categories;
+  }
+
 }

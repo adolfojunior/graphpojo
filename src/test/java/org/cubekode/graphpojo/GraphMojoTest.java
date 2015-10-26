@@ -4,54 +4,81 @@ import graphql.schema.DataFetchingEnvironment;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
 
+import org.cubekode.graphpojo.sample.Category;
+import org.cubekode.graphpojo.sample.Product;
+import org.cubekode.graphpojo.schema.GraphPojoFetcher;
+import org.cubekode.graphpojo.schema.GraphPojoSchema;
+import org.cubekode.graphpojo.schema.GraphPojoSchemaBuilder;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 
+
 public class GraphMojoTest {
 
-  private static GraphPojoMapper pojoMapper;
+  private static GraphPojoSchema schema;
 
-  private static List<SampleProduct> productList;
+  private static Product singleProduct;
+  private static Category singleCategory;
 
-  private static SampleProduct singleProduct;
+  private static List<Product> productList;
+  private static List<Category> categoryList;
 
   @BeforeClass
   public static void mapClasses() {
 
-    productList = new ArrayList<SampleProduct>();
-    IntStream.rangeClosed(1, 10).forEach((i) -> {
-      productList.add(new SampleProduct(i, "Product " + i, "Desc Product " + i, (float) i));
-    });
+    singleCategory = new Category(1, "Category 1");
+    categoryList = Collections.singletonList(singleCategory);
+
+    productList = new ArrayList<Product>();
+    IntStream.rangeClosed(1, 10).forEach(
+        (i) -> {
+          productList.add(new Product(i, "Product " + i, "Desc Product " + i, (float) i, Arrays
+              .asList(new Category(1, "Local Category 1"))));
+        });
     singleProduct = productList.get(0);
 
-    pojoMapper = new GraphPojoMapper();
-    pojoMapper.mapClass(SampleProduct.class, new GraphPojoFetcher<SampleProduct>() {
+    GraphPojoSchemaBuilder builder = new GraphPojoSchemaBuilder();
+
+    builder.add(Category.class, new GraphPojoFetcher<Category>() {
+      @Override
+      protected Category getObject(DataFetchingEnvironment environment) {
+        return singleCategory;
+      }
 
       @Override
-      protected SampleProduct getObject(DataFetchingEnvironment environment) {
+      protected List<Category> getList(DataFetchingEnvironment environment) {
+        return categoryList;
+      }
+    });
+
+    builder.add(Product.class, new GraphPojoFetcher<Product>() {
+      @Override
+      protected Product getObject(DataFetchingEnvironment environment) {
         return singleProduct;
       }
 
       @Override
-      protected List<SampleProduct> getList(DataFetchingEnvironment environment) {
+      protected List<Product> getList(DataFetchingEnvironment environment) {
         return productList;
       }
     });
+
+    schema = builder.build();
   }
 
   @Test
   @SuppressWarnings("unchecked")
   public void testSingleResultIdOnly() throws Exception {
 
-    Map<String, Object> singleResult =
-        pojoMapper.execute("query testSingleResult { Product { id } }");
+    Map<String, Object> singleResult = schema.execute("query testSingleResult { Product { id } }");
 
     Assert.assertNotNull(singleResult);
     Assert.assertFalse(singleResult.isEmpty());
@@ -69,7 +96,7 @@ public class GraphMojoTest {
   public void testSingleResultManyFields() throws Exception {
 
     Map<String, Object> singleResult =
-        pojoMapper.execute("query testSingleResult { Product { id name desc } }");
+        schema.execute("query testSingleResult { Product { id name desc } }");
 
     Assert.assertNotNull(singleResult);
     Assert.assertFalse(singleResult.isEmpty());
@@ -89,7 +116,7 @@ public class GraphMojoTest {
   public void testResultListIdOnly() throws Exception {
 
     Map<String, Object> singleResult =
-        pojoMapper.execute("query testSingleResult { ProductList { id } }");
+        schema.execute("query testSingleResult { ProductList { id } }");
 
     Assert.assertNotNull(singleResult);
     Assert.assertFalse(singleResult.isEmpty());
@@ -109,7 +136,7 @@ public class GraphMojoTest {
   public void testResultListManyFields() throws Exception {
 
     Map<String, Object> singleResult =
-        pojoMapper.execute("query testSingleResult { ProductList { id name } }");
+        schema.execute("query testSingleResult { ProductList { id name } }");
 
     Assert.assertNotNull(singleResult);
     Assert.assertFalse(singleResult.isEmpty());

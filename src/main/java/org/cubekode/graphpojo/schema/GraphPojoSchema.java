@@ -51,7 +51,7 @@ public class GraphPojoSchema {
 
       GraphQLObjectType.Builder builder = GraphQLObjectType.newObject().name(mapping.name);
       GraphQLInputObjectType.Builder argumentBuild =
-          GraphQLInputObjectType.newInputObject().name(mapping.name);
+          GraphQLInputObjectType.newInputObject().name(mapping.name + "Arg");
 
       for (PojoProperty property : mapping.fields.values()) {
         if (mapping.type == property.field.getType()) {

@@ -1,7 +1,5 @@
 package org.cubekode.graphpojo.sample;
 
-import java.util.Map;
-
 import org.cubekode.graphpojo.schema.GraphExecutionException;
 import org.cubekode.graphpojo.schema.GraphPojoSchema;
 import org.cubekode.graphpojo.schema.GraphPojoSchemaBuilder;
@@ -12,6 +10,21 @@ import org.cubekode.graphpojo.schema.PropertyFetcherStrategies;
  */
 public class Sample {
 
+  private GraphPojoSchema schema;
+
+  public Sample(GraphPojoSchema schema) {
+    this.schema = schema;
+  }
+
+  private void query(String q) {
+    System.out.println("# query: " + q);
+    try {
+      System.out.println(" retult:" + schema.execute(q));
+    } catch (GraphExecutionException e) {
+      e.printStackTrace();
+    }
+  }
+
   public static void main(String[] args) throws GraphExecutionException {
 
     GraphPojoSchemaBuilder builder = new GraphPojoSchemaBuilder();
@@ -20,11 +33,10 @@ public class Sample {
     builder.add(Category.class, new CategoryFetcher());
     builder.add(Product.class, new ProductFetcher());
 
-    GraphPojoSchema schema = builder.build();
+    Sample sample = new Sample(builder.build());
 
-    Map<String, Object> queryResult =
-        schema.execute("query GetProduct { Product { id name categories {name} } }");
+    sample.query("query Sample { Product { id name categories {name} } }");
 
-    System.out.println(queryResult);
+    sample.query("query Sample { Product { ..._fragProd } } fragment _fragProd on Product { id name }");
   }
 }

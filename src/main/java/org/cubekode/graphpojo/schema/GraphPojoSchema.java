@@ -163,11 +163,12 @@ public class GraphPojoSchema {
     schema = GraphQLSchema.newSchema().query(builder.build()).build();
   }
 
+  @SuppressWarnings("unchecked")
   public Map<String, Object> execute(String query) throws GraphExecutionException {
     ExecutionResult result = new GraphQL(schema).execute(query);
     if (!result.getErrors().isEmpty()) {
       throw new GraphExecutionException(result.getErrors());
     }
-    return result.getData();
+    return (Map<String, Object>) result.getData();
   }
 }

@@ -140,7 +140,7 @@ public class GraphPojoSchemaBuilder {
         continue;
       }
 
-      String name = field.getName();
+      String name = schemaAdapter.fieldName(field);
 
       if (isPrimitiveValue(field.getType())) {
         fields.put(name, createSimpleField(field, name));

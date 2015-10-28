@@ -36,7 +36,7 @@ public class GraphMojoTest {
 
   protected void addClasses(GraphPojoSchemaBuilder builder) {
     builder.add(Category.class, data.getCategoryFetcher());
-    builder.add(Product.class, data.getCategoryFetcher());
+    builder.add(Product.class, data.getProductFetcher());
   }
 
   @Test

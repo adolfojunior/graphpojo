@@ -13,6 +13,7 @@ import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLOutputType;
 import graphql.schema.GraphQLSchema;
+import graphql.schema.GraphQLType;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -140,16 +141,16 @@ public class GraphPojoSchema {
 
   private List<GraphQLArgument> defineArguments(TypeMapping mapping) {
 
-    Map<String, PojoProperty> fields = mapping.fields;
-    List<GraphQLArgument> arguments = new ArrayList<>(fields.size());
+    Map<String, PojoProperty> properties = mapping.fields;
+    List<GraphQLArgument> arguments = new ArrayList<>(properties.size());
 
-    for (PojoProperty field : fields.values()) {
-      if (mappings.containsKey(mapping.type)) {
-        arguments.add(GraphQLArgument.newArgument().name(field.name)
-            .type(mappings.get(mapping.type).argumentType).build());
-      } else {
-        arguments.add(GraphQLArgument.newArgument().name(field.name)
-            .type((GraphQLInputType) mapping.objectType.getFieldDefinition(field.name)).build());
+    for (PojoProperty property : properties.values()) {
+      if (ScalarsExtension.isScalarType(property.field.getType())) {
+        GraphQLType type = mapping.objectType.getFieldDefinition(property.name).getType();
+        if (type instanceof GraphQLInputType) {
+          arguments.add(GraphQLArgument.newArgument().name(property.name)
+              .type((GraphQLInputType) type).build());
+        }
       }
     }
     return arguments;

@@ -8,7 +8,7 @@ import java.util.Map;
 import org.cubekode.graphpojo.sample.Category;
 import org.cubekode.graphpojo.sample.Product;
 import org.cubekode.graphpojo.schema.GraphPojoSchema;
-import org.cubekode.graphpojo.schema.GraphPojoSchemaBuilder;
+import org.cubekode.graphpojo.schema.GraphPojoBuilder;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,18 +23,18 @@ public class GraphMojoTest {
 
     data = new GraphDataTest();
 
-    GraphPojoSchemaBuilder builder = createSchemaBuilder();
+    GraphPojoBuilder builder = createSchemaBuilder();
 
     addClasses(builder);
 
     schema = builder.build();
   }
 
-  protected GraphPojoSchemaBuilder createSchemaBuilder() {
-    return new GraphPojoSchemaBuilder();
+  protected GraphPojoBuilder createSchemaBuilder() {
+    return new GraphPojoBuilder();
   }
 
-  protected void addClasses(GraphPojoSchemaBuilder builder) {
+  protected void addClasses(GraphPojoBuilder builder) {
     builder.add(Category.class, data.getCategoryFetcher());
     builder.add(Product.class, data.getProductFetcher());
   }

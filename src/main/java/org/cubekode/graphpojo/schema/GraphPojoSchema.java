@@ -1,6 +1,17 @@
 package org.cubekode.graphpojo.schema;
 
 import static graphql.schema.GraphQLObjectType.newObject;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.cubekode.graphpojo.schema.GraphPojoBuilder.ListProperty;
+import org.cubekode.graphpojo.schema.GraphPojoBuilder.PojoProperty;
+import org.cubekode.graphpojo.schema.GraphPojoBuilder.RelationshipProperty;
+import org.cubekode.graphpojo.schema.GraphPojoBuilder.TypeMapping;
+
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.schema.DataFetcher;
@@ -14,16 +25,8 @@ import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLOutputType;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.GraphQLType;
+import graphql.schema.GraphQLTypeReference;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.cubekode.graphpojo.schema.GraphPojoSchemaBuilder.ListProperty;
-import org.cubekode.graphpojo.schema.GraphPojoSchemaBuilder.PojoProperty;
-import org.cubekode.graphpojo.schema.GraphPojoSchemaBuilder.RelationshipProperty;
-import org.cubekode.graphpojo.schema.GraphPojoSchemaBuilder.TypeMapping;
 
 public class GraphPojoSchema {
 
@@ -55,11 +58,11 @@ public class GraphPojoSchema {
           GraphQLInputObjectType.newInputObject().name(mapping.name + "Arg");
 
       for (PojoProperty property : mapping.fields.values()) {
-        if (mapping.type == property.field.getType()) {
-          throw new IllegalStateException("Recursive type is not supported yet - " + property.field);
-        }
+
         builder.field(defineProperty(property));
-        argumentBuild.field(defineArgumentProperty(property));
+        if(!property.isTypeReference){
+        	argumentBuild.field(defineArgumentProperty(property));
+        }
       }
 
       mapping.objectType = builder.build();
@@ -111,16 +114,19 @@ public class GraphPojoSchema {
 
   private GraphQLOutputType defineType(PojoProperty property) {
     if (property instanceof ListProperty) {
-      return new GraphQLList(defineObjectType(((ListProperty) property).listType));
+    	return new GraphQLList(defineObjectType(property, ((ListProperty) property).listType));
     }
-    return defineObjectType(property.field.getType());
+
+    return defineObjectType(property, property.field.getType());
   }
 
-  private GraphQLOutputType defineObjectType(Class<?> type) {
+  private GraphQLOutputType defineObjectType(PojoProperty property, Class<?> type) {
+
     if (ScalarsExtension.isScalarType(type)) {
       return ScalarsExtension.getScalarType(type);
     } else {
-      return defineClass(this.mappings.get(type));
+  		  TypeMapping mapping = this.mappings.get(type);
+		  return new GraphQLTypeReference(mapping.name); 	 
     }
   }
 

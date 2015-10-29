@@ -25,7 +25,7 @@ public class GraphDataTest {
     for (int i = 0; i < 10; i++) {
       categoryList.add(new Category(i, "Category " + i));
       productList.add(new Product(i, "Product " + i, "Desc Product " + i, (float) i, Arrays
-          .asList(new Category(1, "Local Category " + i))));
+          .asList(new Category(1, "Local Category " + i)), null, null));
     }
     
     singleCategory = categoryList.get(0);

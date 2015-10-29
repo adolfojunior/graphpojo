@@ -2,7 +2,7 @@ package org.cubekode.graphpojo.sample;
 
 import org.cubekode.graphpojo.schema.GraphExecutionException;
 import org.cubekode.graphpojo.schema.GraphPojoSchema;
-import org.cubekode.graphpojo.schema.GraphPojoSchemaBuilder;
+import org.cubekode.graphpojo.schema.GraphPojoBuilder;
 import org.cubekode.graphpojo.schema.PropertyFetcherStrategies;
 
 /**
@@ -27,7 +27,7 @@ public class Sample {
 
   public static void main(String[] args) throws GraphExecutionException {
 
-    GraphPojoSchemaBuilder builder = new GraphPojoSchemaBuilder();
+    GraphPojoBuilder builder = new GraphPojoBuilder();
 
     builder.fetcherStrategy(PropertyFetcherStrategies.METHOD_REFLECTION);
     builder.add(Category.class, new CategoryFetcher());
@@ -36,6 +36,8 @@ public class Sample {
     Sample sample = new Sample(builder.build());
 
     sample.query("query Sample { Product { id name categories {name} } }");
+
+    sample.query("query Sample { Product { id name categories {name} relatedProducts{id name} bundledProduct{ name}}}");
 
     sample.query("query Sample { Product { ..._fragProd } } fragment _fragProd on Product { id name }");
   }

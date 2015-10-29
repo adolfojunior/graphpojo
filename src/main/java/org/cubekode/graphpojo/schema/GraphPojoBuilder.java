@@ -1,9 +1,5 @@
 package org.cubekode.graphpojo.schema;
 
-import graphql.schema.DataFetcher;
-import graphql.schema.GraphQLInputObjectType;
-import graphql.schema.GraphQLObjectType;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -15,24 +11,30 @@ import java.util.stream.Collectors;
 
 import org.cubekode.graphpojo.util.ReflectionUtils;
 
-public class GraphPojoSchemaBuilder {
+import graphql.schema.DataFetcher;
+import graphql.schema.GraphQLInputObjectType;
+import graphql.schema.GraphQLObjectType;
+
+public class GraphPojoBuilder {
 
   static class PojoProperty {
 
-    String name;
-    Field field;
-    DataFetcher fetcher;
+	  String name;
+	    Field field;
+	    DataFetcher fetcher;
+	    boolean isTypeReference;
 
-    PojoProperty(String name, Field field, DataFetcher fetcher) {
-      this.name = name;
-      this.field = field;
-      this.fetcher = fetcher;
-    }
+	    PojoProperty(String name, Field field, DataFetcher fetcher, boolean isTypeReference) {
+	      this.name = name;
+	      this.field = field;
+	      this.fetcher = fetcher;
+	      this.isTypeReference = isTypeReference;
+	    }
 
     @Override
     public String toString() {
       return getClass().getSimpleName() + " name=" + name + ", field=" + field + ", fetcher="
-          + fetcher;
+          + fetcher + " isTypeReference=" + isTypeReference;
     }
   }
 
@@ -40,10 +42,10 @@ public class GraphPojoSchemaBuilder {
 
     Class<?> listType;
 
-    public ListProperty(String name, Field field, Class<?> listType, DataFetcher fetcher) {
-      super(name, field, fetcher);
-      this.listType = listType;
-    }
+    public ListProperty(String name, Field field, Class<?> listType, DataFetcher fetcher, boolean isTypeReference) {
+        super(name, field, fetcher, isTypeReference);
+        this.listType = listType;
+      }
 
     @Override
     public String toString() {
@@ -53,9 +55,9 @@ public class GraphPojoSchemaBuilder {
 
   static class RelationshipProperty extends PojoProperty {
 
-    public RelationshipProperty(String name, Field field, DataFetcher fetcher) {
-      super(name, field, fetcher);
-    }
+	  public RelationshipProperty(String name, Field field, DataFetcher fetcher, boolean isTypeReference) {
+	      super(name, field, fetcher, isTypeReference);
+	    }
   }
 
   static class TypeMapping {
@@ -95,22 +97,22 @@ public class GraphPojoSchemaBuilder {
 
   private Map<Class<?>, TypeMapping> mappings = new HashMap<>();
 
-  public GraphPojoSchemaBuilder fetcherStrategy(PropertyFetcherStrategy fetcherStrategy) {
+  public GraphPojoBuilder fetcherStrategy(PropertyFetcherStrategy fetcherStrategy) {
     this.fetcherStrategy = fetcherStrategy;
     return this;
   }
 
-  public GraphPojoSchemaBuilder add(Class<?> type, DataFetcher fetcher) {
+  public GraphPojoBuilder add(Class<?> type, DataFetcher fetcher) {
     add(type.getSimpleName(), type.getSimpleName(), type.getSimpleName(), type, fetcher);
     return this;
   }
   
-  public GraphPojoSchemaBuilder add(String name, Class<?> type, DataFetcher fetcher) {
+  public GraphPojoBuilder add(String name, Class<?> type, DataFetcher fetcher) {
     add(name, name, name, type, fetcher);
     return this;
   }
 
-  public GraphPojoSchemaBuilder add(String name, String queryName, String queryListName, Class<?> type, DataFetcher fetcher) {
+  public GraphPojoBuilder add(String name, String queryName, String queryListName, Class<?> type, DataFetcher fetcher) {
     TypeMapping mapping = mappings.get(type);
     if (mapping != null) {
       if (mapping.internal) {
@@ -152,21 +154,21 @@ public class GraphPojoSchemaBuilder {
       String name = schemaAdapter.fieldName(field);
 
       if (isPrimitiveValue(field.getType())) {
-        fields.put(name, createSimpleField(field, name));
-      } else if (List.class.isAssignableFrom(field.getType())) {
-        fields.put(name, createListField(name, field));
-      } else {
-        fields.put(name, createObjectField(name, field));
-      }
+          fields.put(name, createSimpleField(field, name));
+        } else if (List.class.isAssignableFrom(field.getType())) {
+          fields.put(name, createListField(mapping.type, name, field));
+        } else {
+        	 fields.put(name, createObjectField(mapping.type, name, field));
+        }
     }
     mapping.fields = fields;
   }
 
   private PojoProperty createSimpleField(Field field, String name) {
-    return new PojoProperty(name, field, null);
+	  return new PojoProperty(name, field, null, false);
   }
 
-  private PojoProperty createListField(String name, Field field) {
+  private PojoProperty createListField(Class<?> parentType, String name, Field field) {
 
     Type genericType = field.getGenericType();
 
@@ -178,17 +180,17 @@ public class GraphPojoSchemaBuilder {
           // internal objecting map
           mapClass(name, null, null, typeClass, null, true);
         }
-        return new ListProperty(name, field, typeClass, null);
+        return new ListProperty(name, field, typeClass, null, typeClass == parentType);
       }
       throw new IllegalStateException("Generics is needed to be a raw type at " + field);
     }
     throw new IllegalStateException("Generics is mandatory for List type at " + field);
   }
 
-  private PojoProperty createObjectField(String name, Field field) {
+  private PojoProperty createObjectField(Class<?> parentType, String name, Field field) {
     // internal object mapping
     mapClass(name, null, null, field.getType(), null, true);
-    return new RelationshipProperty(name, field, (DataFetcher) null);
+    return new RelationshipProperty(name, field, (DataFetcher) null, parentType == field.getType());
   }
 
   private Map<String, Field> lookupFields(Class<?> type) {

@@ -10,16 +10,20 @@ public class Product {
   private String name;
   private String desc;
   private Float price;
+  private List<Product> relatedProducts;
+  private Product bundledProduct;
 
   @Relationship(name = "Category", fetcher = CategoryFetcher.class)
   private List<Category> categories;
 
-  public Product(Integer id, String name, String desc, Float price, List<Category> categories) {
+  public Product(Integer id, String name, String desc, Float price, List<Category> categories, List<Product> products, Product bundled) {
     this.id = id;
     this.name = name;
     this.desc = desc;
     this.price = price;
     this.categories = categories;
+    this.relatedProducts = products;
+    this.bundledProduct = bundled;
   }
 
   public Integer getId() {
@@ -60,6 +64,22 @@ public class Product {
 
   public void setCategories(List<Category> categories) {
     this.categories = categories;
+  }
+  
+  public List<Product> getRelatedProducts(){
+	  return relatedProducts;
+  }
+  
+  public void setRelatedProducts(List<Product> products){
+	  this.relatedProducts = products;
+  }
+  
+  public Product getBundledProduct(){
+	  return this.bundledProduct;
+  }
+  
+  public void setRelatedProducts(Product product){
+	  this.bundledProduct = product;
   }
 
 }

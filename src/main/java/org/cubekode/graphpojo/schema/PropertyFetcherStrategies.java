@@ -7,7 +7,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Method;
 import java.util.Map;
 
-import org.cubekode.graphpojo.schema.GraphPojoSchemaBuilder.PojoProperty;
+import org.cubekode.graphpojo.schema.GraphPojoBuilder.PojoProperty;
 import org.cubekode.graphpojo.util.ReflectionUtils;
 
 public enum PropertyFetcherStrategies implements PropertyFetcherStrategy {

@@ -61,6 +61,8 @@ public class GraphPojoSchemaBuilder {
   static class TypeMapping {
 
     String name;
+    String queryName;
+    String queryListName;
     Class<?> type;
     DataFetcher fetcher;
     Map<String, PojoProperty> fields;
@@ -70,8 +72,10 @@ public class GraphPojoSchemaBuilder {
     GraphQLObjectType objectType;
     GraphQLInputObjectType argumentType;
 
-    public TypeMapping(String name, Class<?> type, DataFetcher fetcher, boolean internal) {
+    public TypeMapping(String name, String queryName, String queryListName, Class<?> type, DataFetcher fetcher, boolean internal) {
       this.name = name;
+      this.queryName = queryName;
+      this.queryListName = queryListName;
       this.type = type;
       this.fetcher = fetcher;
       this.internal = internal;
@@ -97,11 +101,16 @@ public class GraphPojoSchemaBuilder {
   }
 
   public GraphPojoSchemaBuilder add(Class<?> type, DataFetcher fetcher) {
-    add(type.getSimpleName(), type, fetcher);
+    add(type.getSimpleName(), type.getSimpleName(), type.getSimpleName(), type, fetcher);
+    return this;
+  }
+  
+  public GraphPojoSchemaBuilder add(String name, Class<?> type, DataFetcher fetcher) {
+    add(name, name, name, type, fetcher);
     return this;
   }
 
-  public GraphPojoSchemaBuilder add(String name, Class<?> type, DataFetcher fetcher) {
+  public GraphPojoSchemaBuilder add(String name, String queryName, String queryListName, Class<?> type, DataFetcher fetcher) {
     TypeMapping mapping = mappings.get(type);
     if (mapping != null) {
       if (mapping.internal) {
@@ -111,17 +120,17 @@ public class GraphPojoSchemaBuilder {
         throw new IllegalArgumentException("Duplicate definition of " + type);
       }
     } else {
-      mapClass(name, type, fetcher, false);
+      mapClass(name, queryName, queryListName, type, fetcher, false);
     }
     return this;
   }
 
-  private TypeMapping mapClass(String name, Class<?> type, DataFetcher fetcher, boolean internal) {
+  private TypeMapping mapClass(String name, String queryName, String queryListName, Class<?> type, DataFetcher fetcher, boolean internal) {
 
     TypeMapping mapping = mappings.get(type);
 
     if (mapping == null) {
-      mapping = new TypeMapping(name, type, fetcher, internal);
+      mapping = new TypeMapping(name, queryName, queryListName, type, fetcher, internal);
       // insert type to avoid recursion
       mappings.put(type, mapping);
       // search relationship in filds
@@ -167,7 +176,7 @@ public class GraphPojoSchemaBuilder {
         Class<?> typeClass = (Class<?>) type;
         if (!isPrimitiveValue(typeClass)) {
           // internal objecting map
-          mapClass(name, typeClass, null, true);
+          mapClass(name, null, null, typeClass, null, true);
         }
         return new ListProperty(name, field, typeClass, null);
       }
@@ -178,7 +187,7 @@ public class GraphPojoSchemaBuilder {
 
   private PojoProperty createObjectField(String name, Field field) {
     // internal object mapping
-    mapClass(name, field.getType(), null, true);
+    mapClass(name, null, null, field.getType(), null, true);
     return new RelationshipProperty(name, field, (DataFetcher) null);
   }
 

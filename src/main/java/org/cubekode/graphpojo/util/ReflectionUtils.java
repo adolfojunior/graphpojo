@@ -1,5 +1,7 @@
 package org.cubekode.graphpojo.util;
 
+import graphql.schema.DataFetchingEnvironment;
+
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -58,5 +60,10 @@ public class ReflectionUtils {
       }
     }
     return methods;
+  }
+
+  public static MethodHandle methodCaller(Method method) throws NoSuchMethodException, IllegalAccessException {
+    return MethodHandles.publicLookup().findVirtual(method.getDeclaringClass(), method.getName(),
+        MethodType.methodType(DataFetchingEnvironment.class));
   }
 }
